@@ -31,14 +31,16 @@ import com.jcalvopinam.dto.OrderDTO;
 import com.jcalvopinam.repository.OrderRepository;
 import com.jcalvopinam.repository.PersonRepository;
 import com.jcalvopinam.utils.Utilities;
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.DefaultRevisionEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.Date;
 import java.util.List;
 
@@ -56,6 +58,8 @@ public class OrderServiceImpl implements OrderService
     private final PersonRepository personRepository;
 
     private String response;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public OrderServiceImpl(OrderRepository orderRepository, PersonRepository personRepository)
     {
@@ -116,6 +120,10 @@ public class OrderServiceImpl implements OrderService
         Person person = personRepository.findOne(2);
         person.setFirstName(person.getFirstName() + "1");
         personRepository.save(person);
+
+        AuditReader reader = AuditReaderFactory.get(entityManager);
+        DefaultRevisionEntity currentRevision = reader.getCurrentRevision(DefaultRevisionEntity.class, true);
+        int id = currentRevision.getId();
         logger.info(response);
         return response;
     }
